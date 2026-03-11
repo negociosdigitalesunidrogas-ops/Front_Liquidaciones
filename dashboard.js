@@ -1,4 +1,4 @@
-const API_URL = "https://tu-backend-en-render.onrender.com";
+const API_URL = "https://liquidaciones-8z77.onrender.com";
 
 // --- Control del Loader ---
 function showLoader() { document.getElementById('loader').classList.add('active'); }
