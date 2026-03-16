@@ -65,7 +65,7 @@ async function cargarComisiones() {
         }
 
         document.getElementById('mainLabel').innerText = "Total Ganado";
-        document.getElementById('totalGeneral').innerText = `${total.toLocaleString()}`;
+        document.getElementById('totalGeneral').innerText = `${total.toLocaleString()} Puntos`;
         document.getElementById('pdv').innerText = data.comisiones[0]?.punto_venta || "Sucursal";
     } catch (e) { 
         console.error(e); 
