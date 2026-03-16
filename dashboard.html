@@ -17,12 +17,12 @@
         <header class="top-bar">
             <div class="brand">
                 <div class="logo-icon"><i class="fas fa-chart-line"></i></div>
-                <h1>Sistema<span>Comisiones</span></h1>
+                <h1><span>Dinamicas</span></h1>
             </div>
             <div class="user-profile">
                 <div class="user-info">
                     <strong id="userName">Cargando...</strong>
-                    <span id="pdv">Cargando sucursal...</span>
+                    <span id="pdv">Sucursal...</span>
                 </div>
                 <button onclick="logout()" class="logout-pill"><i class="fas fa-sign-out-alt"></i></button>
             </div>
@@ -31,7 +31,7 @@
         <main class="dashboard-body">
             <nav class="view-switcher">
                 <button onclick="switchView('comisiones')" id="tab-comisiones" class="tab-btn active">
-                    <i class="fas fa-wallet"></i> Mis Comisiones
+                    <i class="fas fa-wallet"></i> Mis puntos
                 </button>
                 <button onclick="switchView('dinamicas')" id="tab-dinamicas" class="tab-btn">
                     <i class="fas fa-fire"></i> Seguimiento de Dinámicas
@@ -41,7 +41,7 @@
             <section class="stats-grid">
                 <div class="stat-card">
                     <span class="stat-label" id="mainLabel">Total Acumulado</span>
-                    <div class="stat-value" id="totalGeneral">$ 0</div>
+                    <div class="stat-value" id="totalGeneral">0 Puntos</div>
                 </div>
                 <div class="stat-card">
                     <span class="stat-label" id="secondaryLabel">Periodo de Análisis</span>
@@ -56,8 +56,8 @@
                     <table class="main-table">
                         <thead>
                             <tr>
-                                <th>Laboratorio / Entidad</th>
-                                <th class="text-right">Monto Neto</th>
+                                <th>Laboratorio</th>
+                                <th class="text-right">Cantidad Neta</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody"></tbody>
@@ -67,7 +67,7 @@
                 <div id="view-dinamicas" class="view-section hidden" style="padding: 20px;">
                     <div class="table-header-grid">
                         <div>Producto</div>
-                        <div class="text-center">Progreso de Venta</div>
+                        <div class="text-center">Progreso de puntos</div>
                         <div class="text-right">Estado</div>
                     </div>
                     <div id="tableDinamicas">
