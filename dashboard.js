@@ -53,7 +53,7 @@ async function cargarComisiones() {
         tbody.innerHTML = "";
 
         if(data.comisiones.length === 0){
-            tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:var(--text-muted)">No hay comisiones registradas en este periodo.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:var(--text-muted)">No hay puntos registrados en este periodo.</td></tr>`;
         } else {
             data.comisiones.forEach(item => {
                 total += item.monto;
@@ -65,7 +65,7 @@ async function cargarComisiones() {
         }
 
         document.getElementById('mainLabel').innerText = "Total Ganado";
-        document.getElementById('totalGeneral').innerText = `$ ${total.toLocaleString()}`;
+        document.getElementById('totalGeneral').innerText = `${total.toLocaleString()}`;
         document.getElementById('pdv').innerText = data.comisiones[0]?.punto_venta || "Sucursal";
     } catch (e) { 
         console.error(e); 
