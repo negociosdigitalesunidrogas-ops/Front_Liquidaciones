@@ -42,7 +42,7 @@ async function cargarComisiones() {
     const fecha = document.getElementById('fechaFiltro').value;
     
     try {
-        const res = await fetch(`${API_URL}/comisiones/mis-datos?fecha=${fecha}`, {
+        const res = await fetch(`{API_URL}/comisiones/mis-datos?fecha=${fecha}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.status === 401) logout();
@@ -59,7 +59,7 @@ async function cargarComisiones() {
                 total += item.monto;
                 tbody.innerHTML += `<tr>
                     <td><i class="fas fa-flask" style="color:var(--primary); margin-right:8px;"></i> <span style="font-weight:600;">${item.laboratorio}</span></td>
-                    <td class="text-right" style="font-weight:700;">$ ${item.monto.toLocaleString()}</td>
+                    <td class="text-right" style="font-weight:700;">${item.monto.toLocaleString()} Puntos</td>
                 </tr>`;
             });
         }
