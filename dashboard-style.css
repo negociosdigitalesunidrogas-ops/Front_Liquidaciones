@@ -92,3 +92,61 @@ body { background-color: var(--bg-body); font-family: 'Inter', sans-serif; margi
     .text-right { text-align: center; }
     .accordion-header { flex-direction: column; gap: 5px; text-align: center; }
 }
+
+/* --- ESTILOS PROFESIONALES PARA EL USUARIO --- */
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    max-width: 60%; /* Evita que empuje el logo */
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    overflow: hidden; /* Clave para nombres largos */
+}
+
+#userName {
+    font-size: 1rem;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.badge-cargo {
+    font-size: 0.7rem;
+    background: #e0f2fe;
+    color: #0284c7;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin: 3px 0;
+    white-space: nowrap;
+}
+
+#pdv {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* --- RESPONSIVE MEJORADO --- */
+@media (max-width: 768px) {
+    .user-profile {
+        max-width: 100%;
+        width: 100%;
+        justify-content: space-between;
+    }
+    .user-info {
+        align-items: flex-start; /* Alineamos a la izquierda en móviles */
+        width: calc(100% - 60px); /* Deja espacio para el botón de salir */
+    }
+}
