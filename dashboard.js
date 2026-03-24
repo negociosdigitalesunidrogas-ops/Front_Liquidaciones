@@ -1,10 +1,8 @@
 const API_URL = "https://liquidaciones-8z77.onrender.com";
 
-// --- Control del Loader ---
 function showLoader() { document.getElementById('loader').classList.add('active'); }
 function hideLoader() { document.getElementById('loader').classList.remove('active'); }
 
-// --- Inicialización ---
 window.onload = () => {
     const token = localStorage.getItem('access_token');
     if (!token) {
@@ -17,7 +15,10 @@ window.onload = () => {
     const anio = ahora.getFullYear();
     document.getElementById('fechaFiltro').value = `${anio}-${mes}`;
 
-    document.getElementById('userName').innerText = localStorage.getItem('nombre_usuario') || "Vendedor";
+    document.getElementById('userName').innerText = localStorage.getItem('nombre_usuario') || "Empleado";
+    // CARGAMOS EL CARGO AQUÍ
+    document.getElementById('userCargo').innerText = localStorage.getItem('cargo_usuario') || "Vendedor";
+    
     switchView('comisiones');
 };
 
@@ -42,14 +43,13 @@ async function cargarComisiones() {
     const fecha = document.getElementById('fechaFiltro').value;
     
     try {
-        // CORRECCIÓN AQUÍ: Se agregó el $ antes de {API_URL}
+        // ERROR CORREGIDO: Se añadió el símbolo $ antes de {API_URL}
         const res = await fetch(`${API_URL}/comisiones/mis-datos?fecha=${fecha}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
         if (res.status === 401) return logout();
         
-        // CINTURÓN DE SEGURIDAD
         if (!res.ok) {
             const errData = await res.json().catch(() => ({}));
             throw new Error(errData.detail || "Error al cargar los datos del servidor");
@@ -61,10 +61,9 @@ async function cargarComisiones() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = "";
 
-        // VALIDACIÓN DE SUCURSAL Y DATOS
         if(!data.comisiones || data.comisiones.length === 0){
             tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:var(--text-muted)">No hay dinámicas liquidadas en este periodo.</td></tr>`;
-            document.getElementById('pdv').innerText = "Sin sucursal asignada";
+            document.getElementById('pdv').innerHTML = `<i class="fas fa-store-alt"></i> Sin sucursal asignada`;
         } else {
             data.comisiones.forEach(item => {
                 total += item.monto;
@@ -74,8 +73,8 @@ async function cargarComisiones() {
                 </tr>`;
             });
             
-            // TOMA LA SUCURSAL QUE VIENE DESDE BIGQUERY
-            document.getElementById('pdv').innerText = data.comisiones[0].punto_venta || "Sucursal Desconocida";
+            // Renderizamos la sucursal de BigQuery
+            document.getElementById('pdv').innerHTML = `<i class="fas fa-store-alt"></i> ${data.comisiones[0].punto_venta || "Sucursal Desconocida"}`;
         }
 
         document.getElementById('mainLabel').innerText = "Total Liquidado";
@@ -95,13 +94,13 @@ async function cargarDinamicas() {
     const fecha = document.getElementById('fechaFiltro').value;
     
     try {
+        // ERROR CORREGIDO TAMBIÉN AQUÍ
         const res = await fetch(`${API_URL}/comisiones/mis-dinamicas?fecha=${fecha}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
         if (res.status === 401) return logout();
 
-        // CINTURÓN DE SEGURIDAD
         if (!res.ok) {
             const errData = await res.json().catch(() => ({}));
             throw new Error(errData.detail || "Error al cargar las dinámicas");
@@ -120,18 +119,15 @@ async function cargarDinamicas() {
             return;
         }
 
-        // 1. Agrupar productos por Dinámica
         const agrupadas = data.dinamicas.reduce((acc, curr) => {
             if (!acc[curr.nombre]) acc[curr.nombre] = [];
             acc[curr.nombre].push(curr);
             return acc;
         }, {});
 
-        // 2. Renderizar el Acordeón
         for (const [nombreDinamica, productos] of Object.entries(agrupadas)) {
             let faltanteDinamica = 0;
             
-            // Construir las filas de productos
             let htmlProductos = productos.map(d => {
                 totalFaltanteGlobal += d.faltante;
                 faltanteDinamica += d.faltante;
@@ -157,7 +153,6 @@ async function cargarDinamicas() {
                     </div>`;
             }).join('');
 
-            // Inyectar el bloque completo del acordeón
             container.innerHTML += `
                 <div class="accordion-item">
                     <div class="accordion-header" onclick="this.parentElement.classList.toggle('active')">
