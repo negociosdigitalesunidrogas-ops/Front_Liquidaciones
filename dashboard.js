@@ -69,7 +69,7 @@ async function cargarComisiones() {
                 total += item.monto;
                 tbody.innerHTML += `<tr>
                     <td><i class="fas fa-flask" style="color:var(--primary); margin-right:8px;"></i> <span style="font-weight:600;">${item.laboratorio}</span></td>
-                    <td class="text-right" style="font-weight:700;">$ ${item.monto.toLocaleString()}</td>
+                    <td class="text-right" style="font-weight:700;">Puntos ${item.monto.toLocaleString()}</td>
                 </tr>`;
             });
             
@@ -78,7 +78,7 @@ async function cargarComisiones() {
         }
 
         document.getElementById('mainLabel').innerText = "Total Liquidado";
-        document.getElementById('totalGeneral').innerText = `$ ${total.toLocaleString()}`;
+        document.getElementById('totalGeneral').innerText = `Puntos ${total.toLocaleString()}`;
         
     } catch (e) { 
         console.error(e); 
@@ -142,11 +142,11 @@ async function cargarDinamicas() {
                             <div class="progress-container">
                                 <div class="progress-bar" style="width: ${d.progreso}%; background: ${color}"></div>
                             </div>
-                            <small style="color: var(--text-muted)">$ ${d.actual.toLocaleString()} / $ ${d.meta.toLocaleString()}</small>
+                            <small style="color: var(--text-muted)">Puntos ${d.actual.toLocaleString()} / Puntos ${d.meta.toLocaleString()}</small>
                         </div>
                         <div class="text-right">
                             <div style="color: ${d.faltante > 0 ? '#e11d48' : 'var(--success)'}; font-weight:700">
-                                ${d.faltante > 0 ? 'Faltan $ ' + d.faltante.toLocaleString() : '¡OK!'}
+                                ${d.faltante > 0 ? 'Faltan ' + d.faltante.toLocaleString() + ' Puntos' : '¡OK!'}
                             </div>
                             <small style="font-weight:bold; color: var(--text-muted)">${d.progreso.toFixed(1)}%</small>
                         </div>
@@ -162,7 +162,7 @@ async function cargarDinamicas() {
                         </div>
                         <div class="text-right">
                             <span style="color: ${faltanteDinamica > 0 ? '#e11d48' : 'var(--success)'}; font-weight: bold;">
-                                Faltante: $ ${faltanteDinamica.toLocaleString()}
+                                Puntos Faltantes: ${faltanteDinamica.toLocaleString()}
                             </span>
                         </div>
                     </div>
@@ -173,7 +173,7 @@ async function cargarDinamicas() {
         }
 
         document.getElementById('mainLabel').innerText = "Faltante Total Mes";
-        document.getElementById('totalGeneral').innerText = totalFaltanteGlobal > 0 ? `- $ ${totalFaltanteGlobal.toLocaleString()}` : "¡COMPLETO!";
+        document.getElementById('totalGeneral').innerText = totalFaltanteGlobal > 0 ? `- Puntos ${totalFaltanteGlobal.toLocaleString()}` : "¡COMPLETO!";
         
     } catch (e) { 
         console.error(e); 
