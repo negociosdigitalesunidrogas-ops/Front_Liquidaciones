@@ -25,9 +25,9 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         const data = await response.json();
 
         if (response.ok) {
-            // Sincronizamos los nombres con el Dashboard.js:
             localStorage.setItem('access_token', data.access_token);
-            localStorage.setItem('nombre_usuario', data.nombre); // Coincide con el dashboard
+            localStorage.setItem('nombre_usuario', data.nombre);
+            localStorage.setItem('cargo_usuario', data.cargo);
             
             window.location.href = 'dashboard.html';
         } else {
