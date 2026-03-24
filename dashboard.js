@@ -42,33 +42,48 @@ async function cargarComisiones() {
     const fecha = document.getElementById('fechaFiltro').value;
     
     try {
-        const res = await fetch(`{API_URL}/comisiones/mis-datos?fecha=${fecha}`, {
+        // CORRECCIÓN AQUÍ: Se agregó el $ antes de {API_URL}
+        const res = await fetch(`${API_URL}/comisiones/mis-datos?fecha=${fecha}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (res.status === 401) logout();
+        
+        if (res.status === 401) return logout();
+        
+        // CINTURÓN DE SEGURIDAD
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.detail || "Error al cargar los datos del servidor");
+        }
+
         const data = await res.json();
         
         let total = 0;
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = "";
 
-        if(data.comisiones.length === 0){
-            tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:var(--text-muted)">No hay puntos registrados en este periodo.</td></tr>`;
+        // VALIDACIÓN DE SUCURSAL Y DATOS
+        if(!data.comisiones || data.comisiones.length === 0){
+            tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:var(--text-muted)">No hay dinámicas liquidadas en este periodo.</td></tr>`;
+            document.getElementById('pdv').innerText = "Sin sucursal asignada";
         } else {
             data.comisiones.forEach(item => {
                 total += item.monto;
                 tbody.innerHTML += `<tr>
                     <td><i class="fas fa-flask" style="color:var(--primary); margin-right:8px;"></i> <span style="font-weight:600;">${item.laboratorio}</span></td>
-                    <td class="text-right" style="font-weight:700;">${item.monto.toLocaleString()} Puntos</td>
+                    <td class="text-right" style="font-weight:700;">$ ${item.monto.toLocaleString()}</td>
                 </tr>`;
             });
+            
+            // TOMA LA SUCURSAL QUE VIENE DESDE BIGQUERY
+            document.getElementById('pdv').innerText = data.comisiones[0].punto_venta || "Sucursal Desconocida";
         }
 
-        document.getElementById('mainLabel').innerText = "Total Ganado";
-        document.getElementById('totalGeneral').innerText = `${total.toLocaleString()} Puntos`;
-        document.getElementById('pdv').innerText = data.comisiones[0]?.punto_venta || "Sucursal";
+        document.getElementById('mainLabel').innerText = "Total Liquidado";
+        document.getElementById('totalGeneral').innerText = `$ ${total.toLocaleString()}`;
+        
     } catch (e) { 
         console.error(e); 
+        document.getElementById('tableBody').innerHTML = `<tr><td colspan="2" style="text-align:center; color:#e11d48; padding: 20px;">⚠️ ${e.message}</td></tr>`;
     } finally {
         hideLoader();
     }
@@ -83,12 +98,27 @@ async function cargarDinamicas() {
         const res = await fetch(`${API_URL}/comisiones/mis-dinamicas?fecha=${fecha}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (res.status === 401) logout();
+        
+        if (res.status === 401) return logout();
+
+        // CINTURÓN DE SEGURIDAD
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.detail || "Error al cargar las dinámicas");
+        }
+
         const data = await res.json();
         
         const container = document.getElementById('tableDinamicas');
         container.innerHTML = "";
         let totalFaltanteGlobal = 0;
+
+        if(!data.dinamicas || data.dinamicas.length === 0) {
+            container.innerHTML = `<div style="text-align:center; padding: 2rem; color:var(--text-muted)">No hay dinámicas activas en este periodo.</div>`;
+            document.getElementById('mainLabel').innerText = "Faltante Total Mes";
+            document.getElementById('totalGeneral').innerText = "¡COMPLETO!";
+            return;
+        }
 
         // 1. Agrupar productos por Dinámica
         const agrupadas = data.dinamicas.reduce((acc, curr) => {
@@ -116,11 +146,11 @@ async function cargarDinamicas() {
                             <div class="progress-container">
                                 <div class="progress-bar" style="width: ${d.progreso}%; background: ${color}"></div>
                             </div>
-                            <small style="color: var(--text-muted)">${d.actual.toLocaleString()} / ${d.meta.toLocaleString()} ${d.unidad}</small>
+                            <small style="color: var(--text-muted)">$ ${d.actual.toLocaleString()} / $ ${d.meta.toLocaleString()}</small>
                         </div>
                         <div class="text-right">
                             <div style="color: ${d.faltante > 0 ? '#e11d48' : 'var(--success)'}; font-weight:700">
-                                ${d.faltante > 0 ? 'Faltan ' + d.faltante.toLocaleString() : '¡OK!'}
+                                ${d.faltante > 0 ? 'Faltan $ ' + d.faltante.toLocaleString() : '¡OK!'}
                             </div>
                             <small style="font-weight:bold; color: var(--text-muted)">${d.progreso.toFixed(1)}%</small>
                         </div>
@@ -137,7 +167,7 @@ async function cargarDinamicas() {
                         </div>
                         <div class="text-right">
                             <span style="color: ${faltanteDinamica > 0 ? '#e11d48' : 'var(--success)'}; font-weight: bold;">
-                                Faltante: ${faltanteDinamica.toLocaleString()}
+                                Faltante: $ ${faltanteDinamica.toLocaleString()}
                             </span>
                         </div>
                     </div>
@@ -147,15 +177,12 @@ async function cargarDinamicas() {
                 </div>`;
         }
 
-        if (Object.keys(agrupadas).length === 0) {
-            container.innerHTML = `<div style="text-align:center; padding: 2rem; color:var(--text-muted)">No hay dinámicas activas en este periodo.</div>`;
-        }
-
         document.getElementById('mainLabel').innerText = "Faltante Total Mes";
-        document.getElementById('totalGeneral').innerText = totalFaltanteGlobal > 0 ? `- ${totalFaltanteGlobal.toLocaleString()}` : "¡COMPLETO!";
+        document.getElementById('totalGeneral').innerText = totalFaltanteGlobal > 0 ? `- $ ${totalFaltanteGlobal.toLocaleString()}` : "¡COMPLETO!";
         
     } catch (e) { 
         console.error(e); 
+        document.getElementById('tableDinamicas').innerHTML = `<div style="text-align:center; padding: 2rem; color:#e11d48; font-weight:bold;">⚠️ ${e.message}</div>`;
     } finally {
         hideLoader();
     }
