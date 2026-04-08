@@ -1,4 +1,4 @@
-const API_URL = "https://tu-dominio-regalado.ngrok-free.app";
+const API_URL = "vague-monika-preimportantly.ngrok-free.dev";
 
 function showLoader() { document.getElementById('loader').classList.add('active'); }
 function hideLoader() { document.getElementById('loader').classList.remove('active'); }
