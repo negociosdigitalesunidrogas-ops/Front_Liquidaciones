@@ -74,8 +74,6 @@ async function cargarComisiones() {
                     <td class="text-right" style="font-weight:700;">Puntos ${item.monto.toLocaleString()}</td>
                 </tr>`;
             });
-            
-            document.getElementById('pdv').innerHTML = `<i class="fas fa-store-alt"></i> ${data.comisiones[0].punto_venta || "Sucursal Desconocida"}`;
         }
 
         document.getElementById('mainLabel').innerText = "Total Liquidado";
