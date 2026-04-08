@@ -1,4 +1,4 @@
-const API_URL = "https://tu-dominio-regalado.ngrok-free.app";
+const API_URL = "vague-monika-preimportantly.ngrok-free.dev";
 
 if (localStorage.getItem('access_token')) {
     window.location.href = 'dashboard.html';
