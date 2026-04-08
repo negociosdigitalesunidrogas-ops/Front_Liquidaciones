@@ -17,6 +17,7 @@ window.onload = () => {
 
     document.getElementById('userName').innerText = localStorage.getItem('nombre_usuario') || "Empleado";
     document.getElementById('userCargo').innerText = localStorage.getItem('cargo_usuario') || "Vendedor";
+    document.getElementByID('pdv').innerText = localStorage.getItem('punto_venta') || "Punto de Venta"
     
     switchView('comisiones');
 };
