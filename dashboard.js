@@ -66,7 +66,6 @@ async function cargarComisiones() {
 
         if(!data.comisiones || data.comisiones.length === 0){
             tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:var(--text-muted)">No hay dinámicas liquidadas en este periodo.</td></tr>`;
-            document.getElementById('pdv').innerHTML = `<i class="fas fa-store-alt"></i> Sin sucursal asignada`;
         } else {
             data.comisiones.forEach(item => {
                 total += item.monto;
