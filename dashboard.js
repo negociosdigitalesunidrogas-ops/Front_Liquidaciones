@@ -16,7 +16,6 @@ window.onload = () => {
     document.getElementById('fechaFiltro').value = `${anio}-${mes}`;
 
     document.getElementById('userName').innerText = localStorage.getItem('nombre_usuario') || "Empleado";
-    // CARGAMOS EL CARGO AQUÍ
     document.getElementById('userCargo').innerText = localStorage.getItem('cargo_usuario') || "Vendedor";
     
     switchView('comisiones');
@@ -43,9 +42,12 @@ async function cargarComisiones() {
     const fecha = document.getElementById('fechaFiltro').value;
     
     try {
-        // ERROR CORREGIDO: Se añadió el símbolo $ antes de {API_URL}
         const res = await fetch(`${API_URL}/comisiones/mis-datos?fecha=${fecha}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                // AGREGADO: Cabecera para saltar aviso de Ngrok
+                'ngrok-skip-browser-warning': '69420' 
+            }
         });
         
         if (res.status === 401) return logout();
@@ -73,7 +75,6 @@ async function cargarComisiones() {
                 </tr>`;
             });
             
-            // Renderizamos la sucursal de BigQuery
             document.getElementById('pdv').innerHTML = `<i class="fas fa-store-alt"></i> ${data.comisiones[0].punto_venta || "Sucursal Desconocida"}`;
         }
 
@@ -94,9 +95,12 @@ async function cargarDinamicas() {
     const fecha = document.getElementById('fechaFiltro').value;
     
     try {
-        // ERROR CORREGIDO TAMBIÉN AQUÍ
         const res = await fetch(`${API_URL}/comisiones/mis-dinamicas?fecha=${fecha}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                // AGREGADO: Cabecera para saltar aviso de Ngrok
+                'ngrok-skip-browser-warning': '69420'
+            }
         });
         
         if (res.status === 401) return logout();
