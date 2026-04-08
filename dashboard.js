@@ -1,4 +1,4 @@
-const API_URL = "vague-monika-preimportantly.ngrok-free.dev";
+const API_URL = "https://vague-monika-preimportantly.ngrok-free.dev";
 
 function showLoader() { document.getElementById('loader').classList.add('active'); }
 function hideLoader() { document.getElementById('loader').classList.remove('active'); }
