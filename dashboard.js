@@ -1,4 +1,4 @@
-const API_URL = "https://liquidaciones-8z77.onrender.com";
+const API_URL = "http://150.136.114.110:8000";
 
 function showLoader() { document.getElementById('loader').classList.add('active'); }
 function hideLoader() { document.getElementById('loader').classList.remove('active'); }
