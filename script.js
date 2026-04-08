@@ -28,6 +28,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             localStorage.setItem('access_token', data.access_token);
             localStorage.setItem('nombre_usuario', data.nombre);
             localStorage.setItem('cargo_usuario', data.cargo);
+            localStorage.setItem('punto_venta', data.punto_venta);
             
             window.location.href = 'dashboard.html';
         } else {
