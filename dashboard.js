@@ -1,4 +1,4 @@
-const API_URL = "http://150.136.114.110:8000";
+const API_URL = "https://tu-dominio-regalado.ngrok-free.app";
 
 function showLoader() { document.getElementById('loader').classList.add('active'); }
 function hideLoader() { document.getElementById('loader').classList.remove('active'); }
