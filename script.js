@@ -1,3 +1,4 @@
+// 1. CAMBIAMOS NGROK POR TU SERVIDOR LOCAL
 const API_URL = "https://vague-monika-preimportantly.ngrok-free.dev";
 
 if (localStorage.getItem('access_token')) {
@@ -18,7 +19,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     try {
         const response = await fetch(`${API_URL}/login`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': '69420' },
             body: JSON.stringify({ codigo: codigo, documento: documento })
         });
 
@@ -28,7 +29,10 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             localStorage.setItem('access_token', data.access_token);
             localStorage.setItem('nombre_usuario', data.nombre);
             localStorage.setItem('cargo_usuario', data.cargo);
-            localStorage.setItem('punto_venta', data.punto_venta);
+            localStorage.setItem('usuarioSucursal', data.punto_venta);
+            
+            // AGREGAMOS ESTA LÍNEA PARA GUARDAR LA CÉDULA
+            localStorage.setItem('documento_usuario', documento); 
             
             window.location.href = 'dashboard.html';
         } else {
