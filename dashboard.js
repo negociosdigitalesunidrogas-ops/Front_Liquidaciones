@@ -72,7 +72,7 @@ async function cargarComisiones() {
         tbody.innerHTML = "";
 
         if(!data.comisiones || data.comisiones.length === 0){
-            tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:var(--text-muted)">No hay dinámicas liquidadas en este periodo.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:var(--text-muted)">No obtuviste puntos en este periodo.</td></tr>`;
         } else {
             // 💡 MAGIA AQUÍ: Creamos un agrupador para sumar los montos del mismo laboratorio
             const comisionesAgrupadas = {};
