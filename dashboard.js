@@ -156,14 +156,17 @@ async function cargarDinamicas() {
 
         for (const [nombreDinamica, productos] of Object.entries(agrupadas)) {
             let faltanteDinamica = 0;
-            // Leemos si el grupo es de Unidades o Puntos
-            const textoUnidadGrupo = productos[0].unidad === 'Unds' ? 'Unidades' : 'puntos';
+            
+            // Lógica de etiquetas y colores movida AQUÍ ADENTRO:
+            const textoUnidadGrupo = productos[0].unidad === 'Unds' ? 'Unidades Rotadas' : 'Ingresos';
+            const tipoDinamica = productos[0].tipo_dinamica || 'Dinámica';
+            const badgeColor = productos[0].unidad === 'Unds' ? '#3b82f6' : '#10b981';
             
             let htmlProductos = productos.map(d => {
                 totalFaltanteGlobal += d.faltante;
                 faltanteDinamica += d.faltante;
                 
-                const textoUnidad = d.unidad === 'Unds' ? 'Unidades' : 'puntos';
+                const textoUnidad = d.unidad === 'Unds' ? 'Unidades Rotadas' : 'Ingresos';
                 
                 // Colores para las barras (Verde si logra meta, Azul para personal, Naranja para PDV)
                 const colorInd = d.progreso >= 100 ? 'var(--success, #10b981)' : 'var(--primary, #3b82f6)';
@@ -210,9 +213,12 @@ async function cargarDinamicas() {
             container.innerHTML += `
                 <div class="accordion-item">
                     <div class="accordion-header" onclick="this.parentElement.classList.toggle('active')">
-                        <div>
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                             <i class="fas fa-chevron-down acc-icon"></i>
                             <strong style="font-size: 1.1rem; color: var(--text-main);">${nombreDinamica}</strong>
+                            <span style="background: ${badgeColor}20; color: ${badgeColor}; padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
+                                ${tipoDinamica}
+                            </span>
                         </div>
                         <div class="text-right">
                             <span style="color: ${faltanteDinamica > 0 ? '#e11d48' : 'var(--success)'}; font-weight: bold; font-size: 0.95rem;">
