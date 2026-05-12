@@ -139,44 +139,47 @@ async function cargarVisionAdmin() {
 }
 
 async function cambiarSubVistaAdmin(nivel) {
-    // Activamos el Loader para que haya feedback al cambiar sub-pestañas
+    // 1. Activamos el Loader
     showLoader();
-    await new Promise(resolve => setTimeout(resolve, 50));
+    
+    // 💡 SOLUCIÓN LOADER: Le damos 150ms al navegador. Es tiempo suficiente para 
+    // que la pantalla dibuje el círculo girando antes de que el procesador se 
+    // "congele" calculando los 77+ registros.
+    await new Promise(resolve => setTimeout(resolve, 150));
 
     adminSubVistaActual = nivel;
     
-    // Cambiar visualmente las sub-pestañas
+    // 💡 SOLUCIÓN BOTONES: Solo quitamos y ponemos la clase 'active'. 
+    // Eliminamos los estilos forzados (style.background) para que tu CSS haga el trabajo limpio.
     ['nacional', 'coordinador', 'supervisor'].forEach(n => {
         const btn = document.getElementById(`subtab-${n}`);
         if(btn) {
             btn.classList.remove('active');
-            btn.style.background = "var(--white)";
-            btn.style.color = "var(--text-muted)";
         }
     });
+    
     const tabActiva = document.getElementById(`subtab-${nivel}`);
     if(tabActiva) {
         tabActiva.classList.add('active');
-        tabActiva.style.background = "var(--primary)";
-        tabActiva.style.color = "white";
     }
 
     const dataActual = adminDataMaster[`por_${nivel}`] || [];
 
-    // 1. Llenar Desplegable de Dinámicas (Únicas)
+    // Llenar Desplegable de Dinámicas
     const dinSet = new Set(dataActual.map(d => d.dinamica));
     const selectDin = document.getElementById('adminSelectDinamica');
     selectDin.innerHTML = `<option value="TODAS">Todas las Dinámicas</option>` + 
         [...dinSet].map(d => `<option value="${d}">${d}</option>`).join('');
 
-    // 2. Llenar Datalist de Buscador (Nombres únicos)
+    // Llenar Datalist de Buscador
     const entSet = new Set(dataActual.map(d => d.entidad));
     const dataList = document.getElementById('adminEntidadesList');
     dataList.innerHTML = [...entSet].map(e => `<option value="${e}"></option>`).join('');
 
-    // Limpiar inputs y renderizar
     limpiarFiltrosAdmin();
-    hideLoader(); // Ocultamos el Loader al finalizar
+    
+    // Ocultamos el Loader al finalizar
+    hideLoader(); 
 }
 
 function limpiarFiltrosAdmin() {
