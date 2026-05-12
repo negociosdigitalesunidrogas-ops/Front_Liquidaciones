@@ -22,44 +22,53 @@ window.onload = () => {
     document.getElementById('userName').innerText = localStorage.getItem('nombre_usuario') || "Empleado";
     document.getElementById('userCedula').innerHTML = `<i class="fas fa-id-card"></i> C.C. ${localStorage.getItem('documento_usuario') || "Sin registro"}`;
     
-    // --- LÓGICA DE PERMISOS JERÁRQUICOS ---
+    // --- LÓGICA DE PERMISOS JERÁRQUICOS (3 NIVELES) ---
     const cargo = (localStorage.getItem('cargo_usuario') || "").toUpperCase();
     
     // Referencias a los botones de navegación
+    const tabAdmin = document.getElementById('tab-admin');
     const tabLideres = document.getElementById('tab-lideres');
     const tabDinamicas = document.getElementById('tab-dinamicas');
     const tabComisiones = document.getElementById('tab-comisiones');
 
-    if (cargo.includes("SUPERVISOR") || cargo.includes("COORDINADOR")) {
-        // 1. Mostrar pestaña de líderes
-        tabLideres.classList.remove('hidden');
-        
-        // 2. Ocultar pestañas de vendedor (No participan en dinámicas)
+    if (cargo.includes("ADMIN")) {
+        // 1. Mostrar solo pestaña ADMIN
+        tabAdmin.classList.remove('hidden');
+        tabLideres.classList.add('hidden');
         tabDinamicas.classList.add('hidden');
         tabComisiones.classList.add('hidden');
-        
-        // 3. Forzar entrada a la vista de equipos
+        switchView('admin');
+    } 
+    else if (cargo.includes("SUPERVISOR") || cargo.includes("COORDINADOR")) {
+        // 2. Mostrar solo pestaña de LÍDERES
+        tabAdmin.classList.add('hidden');
+        tabLideres.classList.remove('hidden');
+        tabDinamicas.classList.add('hidden');
+        tabComisiones.classList.add('hidden');
         switchView('lideres');
-    } else {
-        // Es un vendedor: ocultar visión de equipo y mostrar lo suyo
+    } 
+    else {
+        // 3. Es un vendedor: mostrar sus dinámicas y comisiones
+        tabAdmin.classList.add('hidden');
         tabLideres.classList.add('hidden');
         tabDinamicas.classList.remove('hidden');
         tabComisiones.classList.remove('hidden');
-        
         switchView('dinamicas');
     }
 };
 
 async function switchView(view) {
     const tabs = { 
-        com: document.getElementById('tab-comisiones'), 
+        adm: document.getElementById('tab-admin'),
+        lid: document.getElementById('tab-lideres'),
         din: document.getElementById('tab-dinamicas'),
-        lid: document.getElementById('tab-lideres') // Nuevo
+        com: document.getElementById('tab-comisiones')
     };
     const views = { 
-        com: document.getElementById('view-comisiones'), 
+        adm: document.getElementById('view-admin'),
+        lid: document.getElementById('view-lideres'),
         din: document.getElementById('view-dinamicas'),
-        lid: document.getElementById('view-lideres') // Nuevo
+        com: document.getElementById('view-comisiones')
     };
 
     // Reseteamos todas las clases
@@ -67,7 +76,13 @@ async function switchView(view) {
     Object.values(views).forEach(v => v && v.classList.add('hidden'));
 
     // Activamos la vista solicitada
-    if (view === 'lideres') {
+    if (view === 'admin') {
+        tabs.adm.classList.add('active');
+        views.adm.classList.remove('hidden');
+        document.getElementById('mainLabel').innerText = "Visión Gerencial";
+        document.getElementById('totalGeneral').innerText = "Cargando...";
+        await cargarVisionAdmin();
+    } else if (view === 'lideres') {
         tabs.lid.classList.add('active');
         views.lid.classList.remove('hidden');
         document.getElementById('mainLabel').innerText = "Resumen de Zona";
@@ -84,7 +99,166 @@ async function switchView(view) {
     }
 }
 
-// --- NUEVA FUNCIÓN: CARGAR EQUIPOS DE LÍDERES ---
+// ========================================================
+// --- MÓDULO ADMIN: VISIÓN GLOBAL Y FILTROS ---
+// ========================================================
+let adminDataMaster = {};
+let adminSubVistaActual = 'coordinador'; // Inicia en coordinadores por defecto
+
+async function cargarVisionAdmin() {
+    showLoader();
+    const token = localStorage.getItem('access_token');
+    const fecha = document.getElementById('fechaFiltro').value;
+    
+    try {
+        const res = await fetch(`${API_URL}/admin/vision-global?fecha=${fecha}`, {
+            headers: { 'Authorization': `Bearer ${token}`, 'ngrok-skip-browser-warning': '69420' }
+        });
+        
+        if (res.status === 401) return logout();
+        if (!res.ok) throw new Error("Error cargando panel gerencial");
+
+        adminDataMaster = await res.json();
+        
+        // Disparamos la vista por defecto (Coordinadores)
+        cambiarSubVistaAdmin(adminSubVistaActual);
+
+    } catch (e) {
+        console.error(e);
+        document.getElementById('containerAdmin').innerHTML = `<div style="text-align:center; color:#e11d48; padding: 2rem;">⚠️ ${e.message}</div>`;
+        document.getElementById('totalGeneral').innerText = "Error";
+    } finally {
+        hideLoader();
+    }
+}
+
+function cambiarSubVistaAdmin(nivel) {
+    adminSubVistaActual = nivel;
+    
+    // Cambiar visualmente las sub-pestañas
+    ['coordinador', 'supervisor', 'pdv'].forEach(n => {
+        const btn = document.getElementById(`subtab-${n}`);
+        if(btn) {
+            btn.classList.remove('active');
+            btn.style.background = "var(--white)";
+            btn.style.color = "var(--text-muted)";
+        }
+    });
+    const tabActiva = document.getElementById(`subtab-${nivel}`);
+    if(tabActiva) {
+        tabActiva.classList.add('active');
+        tabActiva.style.background = "var(--primary)";
+        tabActiva.style.color = "white";
+    }
+
+    const dataActual = adminDataMaster[`por_${nivel}`] || [];
+
+    // 1. Llenar Desplegable de Dinámicas (Únicas)
+    const dinSet = new Set(dataActual.map(d => d.dinamica));
+    const selectDin = document.getElementById('adminSelectDinamica');
+    selectDin.innerHTML = `<option value="TODAS">Todas las Dinámicas</option>` + 
+        [...dinSet].map(d => `<option value="${d}">${d}</option>`).join('');
+
+    // 2. Llenar Datalist de Buscador (Nombres únicos)
+    const entSet = new Set(dataActual.map(d => d.entidad));
+    const dataList = document.getElementById('adminEntidadesList');
+    dataList.innerHTML = [...entSet].map(e => `<option value="${e}"></option>`).join('');
+
+    // Limpiar inputs y renderizar
+    limpiarFiltrosAdmin();
+}
+
+function limpiarFiltrosAdmin() {
+    document.getElementById('adminSearchEntidad').value = "";
+    document.getElementById('adminSelectDinamica').value = "TODAS";
+    aplicarFiltrosAdmin();
+}
+
+function aplicarFiltrosAdmin() {
+    const searchVal = document.getElementById('adminSearchEntidad').value.toLowerCase().trim();
+    const dinVal = document.getElementById('adminSelectDinamica').value;
+    
+    let filtrados = (adminDataMaster[`por_${adminSubVistaActual}`] || []).filter(item => {
+        const matchNombre = item.entidad.toLowerCase().includes(searchVal);
+        const matchDin = (dinVal === "TODAS" || item.dinamica === dinVal);
+        return matchNombre && matchDin;
+    });
+
+    // Agrupar por Entidad (Nombre del Coord, Sup o PDV)
+    const agrupado = filtrados.reduce((acc, curr) => {
+        if (!acc[curr.entidad]) acc[curr.entidad] = [];
+        acc[curr.entidad].push(curr);
+        return acc;
+    }, {});
+
+    renderizarVistaAdmin(agrupado);
+}
+
+function renderizarVistaAdmin(agrupado) {
+    const container = document.getElementById('containerAdmin');
+    container.innerHTML = "";
+
+    const keys = Object.keys(agrupado);
+    if (keys.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding: 2rem; color: var(--text-muted);">No se encontraron resultados para este filtro.</div>`;
+        document.getElementById('totalGeneral').innerText = "0 Resultados";
+        return;
+    }
+
+    // Icono dinámico según la vista
+    let icon = "fa-users";
+    if (adminSubVistaActual === 'pdv') icon = "fa-store-alt";
+    else if (adminSubVistaActual === 'coordinador') icon = "fa-user-tie";
+
+    keys.forEach(entidad => {
+        const dinámicas = agrupado[entidad];
+        
+        let htmlDinamicas = dinámicas.map(d => {
+            const badgeColor = d.unidad === 'Unds' ? '#3b82f6' : '#10b981';
+            const textoUnidad = d.unidad === 'Unds' ? 'Unidades' : 'Ingresos';
+            
+            return `
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                    <strong style="color: #1e293b;">${d.dinamica}</strong>
+                    <span style="color: ${d.faltante > 0 ? '#e11d48' : '#10b981'}; font-weight: bold; font-size: 0.85rem;">
+                        ${d.faltante > 0 ? 'Faltan ' + d.faltante.toLocaleString() + ' ' + textoUnidad : '¡Logrado!'}
+                    </span>
+                </div>
+                <div style="background: #f1f5f9; border-radius: 8px; height: 10px; overflow: hidden; width: 100%;">
+                    <div style="width: ${d.progreso}%; background: ${d.progreso >= 100 ? '#10b981' : '#00acec'}; height: 100%; transition: width 0.8s ease;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-top: 8px;">
+                    <span style="background: ${badgeColor}20; color: ${badgeColor}; padding: 2px 8px; border-radius: 8px; font-weight: 700;">${d.tipo_dinamica.toUpperCase()}</span>
+                    <span style="color: #64748b; font-weight: 600;">${d.actual.toLocaleString()} / ${d.meta.toLocaleString()} (${d.progreso.toFixed(1)}%)</span>
+                </div>
+            </div>`;
+        }).join('');
+
+        container.innerHTML += `
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="this.parentElement.classList.toggle('active')">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-chevron-down acc-icon"></i>
+                        <strong style="font-size: 1.1rem; color: var(--text-main);"><i class="fas ${icon}" style="color: var(--primary); margin-right: 5px;"></i> ${entidad}</strong>
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">
+                        ${dinámicas.length} Dinámicas Activas
+                    </div>
+                </div>
+                <div class="accordion-content" style="padding: 15px; background: #f8fafc;">
+                    ${htmlDinamicas}
+                </div>
+            </div>`;
+    });
+
+    document.getElementById('totalGeneral').innerText = `${keys.length} Registros`;
+}
+
+
+// ========================================================
+// --- MÓDULO LÍDERES (SUPERVISOR / COORDINADOR) ---
+// ========================================================
 async function cargarEquiposLider() {
     showLoader();
     const token = localStorage.getItem('access_token');
@@ -115,14 +289,11 @@ async function cargarEquiposLider() {
             return;
         }
 
-        let sucursalesMostradas = 0;
-
         data.dinamicas_lider.forEach(din => {
             const badgeColor = din.unidad === 'Unds' ? '#3b82f6' : '#10b981';
             const textoUnidad = din.unidad === 'Unds' ? 'Unidades Rotadas' : 'Ingresos';
 
             let htmlSucursales = din.sucursales.map(suc => {
-                sucursalesMostradas++;
                 return `
                 <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
@@ -152,7 +323,7 @@ async function cargarEquiposLider() {
                             <span style="background: ${badgeColor}20; color: ${badgeColor}; padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase;">${din.tipo_dinamica}</span>
                         </div>
                         <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">
-                            ${din.sucursales.length} Sucursales
+                            ${din.sucursales.length} Registros
                         </div>
                     </div>
                     <div class="accordion-content" style="padding: 15px; background: #f8fafc;">
@@ -170,8 +341,10 @@ async function cargarEquiposLider() {
         hideLoader();
     }
 }
-// --------------------------------------------------------
 
+// ========================================================
+// --- MÓDULO VENDEDORES: COMISIONES Y DINÁMICAS ---
+// ========================================================
 async function cargarComisiones() {
     showLoader();
     const token = localStorage.getItem('access_token');
@@ -362,10 +535,19 @@ async function cargarDinamicas() {
     }
 }
 
-// Actualizamos el filtro para que también funcione con la pestaña de líderes
+// ========================================================
+// --- HERRAMIENTAS GLOBALES ---
+// ========================================================
+
 function cargarDinamicasConFiltro() {
-    const vistaActivaId = document.querySelector('.tab-btn.active').id;
-    if(vistaActivaId === 'tab-lideres') {
+    const activeTab = document.querySelector('.tab-btn.active');
+    if (!activeTab) return;
+    
+    const vistaActivaId = activeTab.id;
+    
+    if(vistaActivaId === 'tab-admin') {
+        cargarVisionAdmin();
+    } else if(vistaActivaId === 'tab-lideres') {
         cargarEquiposLider();
     } else if(vistaActivaId === 'tab-comisiones') {
         cargarComisiones();
@@ -424,9 +606,7 @@ function renderizarCarrusel() {
     });
 }
 
-function moveSlide(step) {
-    irASlide(currentSlide + step);
-}
+function moveSlide(step) { irASlide(currentSlide + step); }
 
 function irASlide(index) {
     const slides = document.querySelectorAll('.carousel-slide');
