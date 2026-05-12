@@ -58,6 +58,13 @@ window.onload = () => {
 };
 
 async function switchView(view) {
+    // 1. Mostrar el loader INMEDIATAMENTE al hacer clic
+    showLoader();
+
+    // 2. MAGIA: Pausar el código 50 milisegundos. 
+    // Esto no se nota, pero le da tiempo al navegador de "dibujar" el loader antes de congelarse cargando datos.
+    await new Promise(resolve => setTimeout(resolve, 50));
+
     const tabs = { 
         adm: document.getElementById('tab-admin'),
         lid: document.getElementById('tab-lideres'),
@@ -71,11 +78,11 @@ async function switchView(view) {
         com: document.getElementById('view-comisiones')
     };
 
-    // Reseteamos todas las clases
+    // Reseteamos todas las clases (ocultamos todo)
     Object.values(tabs).forEach(t => t && t.classList.remove('active'));
     Object.values(views).forEach(v => v && v.classList.add('hidden'));
 
-    // Activamos la vista solicitada
+    // Activamos la vista solicitada y ejecutamos la carga
     if (view === 'admin') {
         tabs.adm.classList.add('active');
         views.adm.classList.remove('hidden');
@@ -98,7 +105,6 @@ async function switchView(view) {
         await cargarDinamicas();
     }
 }
-
 // ========================================================
 // --- MÓDULO ADMIN: VISIÓN GLOBAL Y FILTROS ---
 // ========================================================
