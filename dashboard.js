@@ -23,18 +23,14 @@ window.onload = () => {
     document.getElementById('userCedula').innerHTML = `<i class="fas fa-id-card"></i> C.C. ${localStorage.getItem('documento_usuario') || "Sin registro"}`;
     
     // --- LÓGICA DE PERMISOS JERÁRQUICOS (3 NIVELES) ---
-    // Agregamos .trim() para eliminar espacios accidentales que vengan del Excel
     const cargo = (localStorage.getItem('cargo_usuario') || "").toUpperCase().trim();
     
-    // Referencias a los botones de navegación
     const tabAdmin = document.getElementById('tab-admin');
     const tabLideres = document.getElementById('tab-lideres');
     const tabDinamicas = document.getElementById('tab-dinamicas');
     const tabComisiones = document.getElementById('tab-comisiones');
 
-    // 💡 LA SOLUCIÓN: Usamos === para que sea EXACTAMENTE "ADMIN"
     if (cargo === "ADMIN") {
-        // 1. Mostrar solo pestaña ADMIN
         tabAdmin.classList.remove('hidden');
         tabLideres.classList.add('hidden');
         tabDinamicas.classList.add('hidden');
@@ -42,7 +38,6 @@ window.onload = () => {
         switchView('admin');
     } 
     else if (cargo.includes("SUPERVISOR") || cargo.includes("COORDINADOR")) {
-        // 2. Mostrar solo pestaña de LÍDERES
         tabAdmin.classList.add('hidden');
         tabLideres.classList.remove('hidden');
         tabDinamicas.classList.add('hidden');
@@ -50,7 +45,6 @@ window.onload = () => {
         switchView('lideres');
     } 
     else {
-        // 3. Es un vendedor (incluyendo Administradores de PDV): mostrar sus dinámicas y comisiones
         tabAdmin.classList.add('hidden');
         tabLideres.classList.add('hidden');
         tabDinamicas.classList.remove('hidden');
@@ -60,10 +54,7 @@ window.onload = () => {
 };
 
 async function switchView(view) {
-    // 1. Mostrar el loader INMEDIATAMENTE al hacer clic
     showLoader();
-
-    // 2. MAGIA: Pausar el código 50 milisegundos. 
     await new Promise(resolve => setTimeout(resolve, 50));
 
     const tabs = { 
@@ -79,11 +70,9 @@ async function switchView(view) {
         com: document.getElementById('view-comisiones')
     };
 
-    // Reseteamos todas las clases (ocultamos todo)
     Object.values(tabs).forEach(t => t && t.classList.remove('active'));
     Object.values(views).forEach(v => v && v.classList.add('hidden'));
 
-    // Activamos la vista solicitada y ejecutamos la carga
     if (view === 'admin') {
         tabs.adm.classList.add('active');
         views.adm.classList.remove('hidden');
@@ -111,7 +100,7 @@ async function switchView(view) {
 // --- MÓDULO ADMIN: VISIÓN GLOBAL Y FILTROS ---
 // ========================================================
 let adminDataMaster = {};
-let adminSubVistaActual = 'nacional'; // El Admin inicia viendo la general del País por defecto
+let adminSubVistaActual = 'nacional'; 
 
 async function cargarVisionAdmin() {
     showLoader();
@@ -128,8 +117,8 @@ async function cargarVisionAdmin() {
 
         adminDataMaster = await res.json();
         
-        // Disparamos la vista por defecto
-        await (adminSubVistaActual);
+        // 💡 CORRECCIÓN DEL BUG: Llamamos a la función correcta
+        cambiarSubVistaAdmin(adminSubVistaActual);
 
     } catch (e) {
         console.error(e);
@@ -137,13 +126,11 @@ async function cargarVisionAdmin() {
         document.getElementById('totalGeneral').innerText = "Error";
         hideLoader();
     } 
-    // Nota: El hideLoader exitoso lo maneja cambiarSubVistaAdmin()
 }
 
 function cambiarSubVistaAdmin(nivel) {
     showLoader();
     
-    // Regresamos a iterar sobre los 3 niveles
     ['nacional', 'coordinador', 'supervisor'].forEach(n => {
         const btn = document.getElementById(`subtab-${n}`);
         if(btn) {
@@ -194,7 +181,6 @@ function aplicarFiltrosAdmin() {
         return matchNombre && matchDin;
     });
 
-    // Agrupar por Entidad (Nacional, Coord o Sup)
     const agrupado = filtrados.reduce((acc, curr) => {
         if (!acc[curr.entidad]) acc[curr.entidad] = [];
         acc[curr.entidad].push(curr);
@@ -226,7 +212,6 @@ function renderizarVistaAdmin(agrupado) {
             const badgeColor = d.unidad === 'Unds' ? '#3b82f6' : '#10b981';
             const textoUnidad = d.unidad === 'Unds' ? 'Unidades' : 'Ingresos';
             
-            // Mensajes de Estado Específicos para cumplimiento
             const msgGeneral = d.faltante_general > 0 ? `Faltan ${d.faltante_general.toLocaleString()} ${textoUnidad}` : '¡Logrado!';
             const msgCall = d.faltante_call > 0 ? `Faltan ${d.faltante_call.toLocaleString()}` : '¡Objetivo Especial Call Center Alcanzado!';
             const msgSuper = d.faltante_super > 0 ? `Faltan ${d.faltante_super.toLocaleString()}` : '¡Objetivo Especial Supernumerario Alcanzado!';
