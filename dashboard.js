@@ -108,7 +108,6 @@ async function cargarVisionAdmin() {
     const fecha = document.getElementById('fechaFiltro').value;
     
     try {
-        // 💡 CACHE-BUSTER: Agregamos la hora exacta al final para forzar la descarga de la nueva estructura
         const url = `${API_URL}/admin/vision-global?fecha=${fecha}&_cb=${new Date().getTime()}`;
         const res = await fetch(url, {
             headers: { 'Authorization': `Bearer ${token}`, 'ngrok-skip-browser-warning': '69420' }
@@ -118,7 +117,6 @@ async function cargarVisionAdmin() {
         if (!res.ok) throw new Error("Error cargando panel gerencial");
 
         adminDataMaster = await res.json();
-        
         cambiarSubVistaAdmin(adminSubVistaActual);
 
     } catch (e) {
@@ -177,7 +175,7 @@ function aplicarFiltrosAdmin() {
     const dinVal = document.getElementById('adminSelectDinamica').value;
     
     let filtrados = (adminDataMaster[`por_${adminSubVistaActual}`] || []).filter(item => {
-        const matchNombre = item.entidad.toLowerCase().includes(searchVal);
+        const matchNombre = (item.entidad || "").toLowerCase().includes(searchVal);
         const matchDin = (dinVal === "TODAS" || item.dinamica === dinVal);
         return matchNombre && matchDin;
     });
@@ -213,10 +211,10 @@ function renderizarVistaAdmin(agrupado) {
         let htmlDinamicas = dinámicas.map(d => {
             const badgeColor = d.unidad === 'Unds' ? '#3b82f6' : '#10b981';
             const textoUnidad = d.unidad === 'Unds' ? 'Unidades' : 'Ingresos';
+            const tipoStr = d.tipo_dinamica || "DINÁMICA"; // ADIÓS N/A
             
             // Si la vista activa es la ESPECIAL, dibujamos 3 barras
             if (adminSubVistaActual === 'especial') {
-                // 🛡️ BLINDAJE DE VARIABLES ANTI-CRASH:
                 const f_gen = d.faltante_general || 0;
                 const msgGeneral = f_gen > 0 ? `Faltan ${f_gen.toLocaleString()} ${textoUnidad}` : '¡Logrado!';
                 
@@ -226,23 +224,15 @@ function renderizarVistaAdmin(agrupado) {
                 const f_super = d.faltante_super || 0;
                 const msgSuper = f_super > 0 ? `Faltan ${f_super.toLocaleString()}` : '¡Logrado!';
                 
-                const act_gen = d.actual_general || 0;
-                const met_gen = d.meta_general || 0;
-                const prog_gen = d.progreso_general || 0;
-
-                const act_call = d.actual_call || 0;
-                const met_call = d.meta_call || 0;
-                const prog_call = d.progreso_call || 0;
-
-                const act_super = d.actual_super || 0;
-                const met_super = d.meta_super || 0;
-                const prog_super = d.progreso_super || 0;
+                const act_gen = d.actual_general || 0, met_gen = d.meta_general || 0, prog_gen = d.progreso_general || 0;
+                const act_call = d.actual_call || 0, met_call = d.meta_call || 0, prog_call = d.progreso_call || 0;
+                const act_super = d.actual_super || 0, met_super = d.meta_super || 0, prog_super = d.progreso_super || 0;
 
                 return `
                 <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
                         <strong style="color: #1e293b; font-size: 1.1rem;">${d.dinamica || "Dinámica"}</strong>
-                        <span style="background: ${badgeColor}20; color: ${badgeColor}; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.75rem;">${(d.tipo_dinamica || "N/A").toUpperCase()}</span>
+                        <span style="background: ${badgeColor}20; color: ${badgeColor}; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.75rem;">${tipoStr.toUpperCase()}</span>
                     </div>
                     
                     <div style="margin-bottom: 15px;">
@@ -285,9 +275,8 @@ function renderizarVistaAdmin(agrupado) {
                     </div>
                 </div>`;
             } 
-            // Si es CUALQUIER OTRA VISTA (Nacional, Coordinador, Supervisor), dibujamos 1 sola barra
+            // VISTAS ESTÁNDAR (Nacional, Coordinador, Supervisor) = 1 Barra
             else {
-                // 🛡️ BLINDAJE DE VARIABLES ESTÁNDAR
                 const f_norm = d.faltante || 0;
                 const a_norm = d.actual || 0;
                 const m_norm = d.meta || 0;
@@ -305,7 +294,7 @@ function renderizarVistaAdmin(agrupado) {
                         <div style="width: ${p_norm}%; background: ${p_norm >= 100 ? '#10b981' : '#00acec'}; height: 100%; transition: width 0.8s ease;"></div>
                     </div>
                     <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-top: 8px;">
-                        <span style="background: ${badgeColor}20; color: ${badgeColor}; padding: 2px 8px; border-radius: 8px; font-weight: 700;">${(d.tipo_dinamica || "N/A").toUpperCase()}</span>
+                        <span style="background: ${badgeColor}20; color: ${badgeColor}; padding: 2px 8px; border-radius: 8px; font-weight: 700;">${tipoStr.toUpperCase()}</span>
                         <span style="color: #64748b; font-weight: 600;">${a_norm.toLocaleString()} / ${m_norm.toLocaleString()} (${p_norm.toFixed(1)}%)</span>
                     </div>
                 </div>`;
@@ -369,9 +358,9 @@ async function cargarEquiposLider() {
         data.dinamicas_lider.forEach(din => {
             const badgeColor = din.unidad === 'Unds' ? '#3b82f6' : '#10b981';
             const textoUnidad = din.unidad === 'Unds' ? 'Unidades Rotadas' : 'Ingresos';
+            const tipoStr = din.tipo_dinamica || "DINÁMICA"; // ADIÓS N/A
 
             let htmlSucursales = din.sucursales.map(suc => {
-                // 🛡️ BLINDAJE LÍDERES
                 const s_falt = suc.faltante || 0;
                 const s_act = suc.actual || 0;
                 const s_met = suc.meta || 0;
@@ -403,7 +392,7 @@ async function cargarEquiposLider() {
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <i class="fas fa-chevron-down acc-icon"></i>
                             <strong style="font-size: 1.1rem; color: var(--text-main);">${din.nombre}</strong>
-                            <span style="background: ${badgeColor}20; color: ${badgeColor}; padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase;">${din.tipo_dinamica}</span>
+                            <span style="background: ${badgeColor}20; color: ${badgeColor}; padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase;">${tipoStr.toUpperCase()}</span>
                         </div>
                         <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">
                             ${din.sucursales.length} Registros
@@ -537,7 +526,7 @@ async function cargarDinamicas() {
             let faltanteDinamica = 0;
             
             const textoUnidadGrupo = productos[0].unidad === 'Unds' ? 'Unidades Rotadas' : 'Ingresos';
-            const tipoDinamica = productos[0].tipo_dinamica || 'Dinámica';
+            const tipoStr = productos[0].tipo_dinamica || 'DINÁMICA'; // ADIÓS N/A
             const badgeColor = productos[0].unidad === 'Unds' ? '#3b82f6' : '#10b981';
             
             let htmlProductos = productos.map(d => {
@@ -552,7 +541,6 @@ async function cargarDinamicas() {
                 faltanteDinamica += p_falt;
                 
                 const textoUnidad = d.unidad === 'Unds' ? 'Unidades Rotadas' : 'Ingresos';
-                
                 const colorInd = (d.progreso || 0) >= 100 ? 'var(--success, #10b981)' : 'var(--primary, #3b82f6)';
                 const colorPdv = (d.progreso_pdv || 0) >= 100 ? 'var(--success, #10b981)' : '#f59e0b';
                 
@@ -601,7 +589,7 @@ async function cargarDinamicas() {
                             <i class="fas fa-chevron-down acc-icon"></i>
                             <strong style="font-size: 1.1rem; color: var(--text-main);">${nombreDinamica}</strong>
                             <span style="background: ${badgeColor}20; color: ${badgeColor}; padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
-                                ${tipoDinamica}
+                                ${tipoStr.toUpperCase()}
                             </span>
                         </div>
                         <div class="text-right">
@@ -654,7 +642,8 @@ let bannersData = [];
 
 async function cargarBanners() {
     try {
-        const res = await fetch(`${API_URL}/banners`, {
+        const url = `${API_URL}/banners?_cb=${new Date().getTime()}`;
+        const res = await fetch(url, {
             headers: { 'ngrok-skip-browser-warning': '69420' }
         });
         if (!res.ok) return;
