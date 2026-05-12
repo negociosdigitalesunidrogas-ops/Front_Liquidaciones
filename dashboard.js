@@ -129,7 +129,7 @@ async function cargarVisionAdmin() {
         adminDataMaster = await res.json();
         
         // Disparamos la vista por defecto
-        await cambiarSubVistaAdmin(adminSubVistaActual);
+        await (adminSubVistaActual);
 
     } catch (e) {
         console.error(e);
@@ -140,23 +140,16 @@ async function cargarVisionAdmin() {
     // Nota: El hideLoader exitoso lo maneja cambiarSubVistaAdmin()
 }
 
-async function cambiarSubVistaAdmin(nivel) {
-    // 1. Activamos el Loader
+function cambiarSubVistaAdmin(nivel) {
     showLoader();
     
-    // 💡 SOLUCIÓN LOADER: Le damos 150ms al navegador. Es tiempo suficiente para 
-    // que la pantalla dibuje el círculo girando antes de que el procesador se 
-    // "congele" calculando los 77+ registros.
-    await new Promise(resolve => setTimeout(resolve, 150));
-
-    adminSubVistaActual = nivel;
-    
-    // 💡 SOLUCIÓN BOTONES: Solo quitamos y ponemos la clase 'active'. 
-    // Eliminamos los estilos forzados (style.background) para que tu CSS haga el trabajo limpio.
+    // Regresamos a iterar sobre los 3 niveles
     ['nacional', 'coordinador', 'supervisor'].forEach(n => {
         const btn = document.getElementById(`subtab-${n}`);
         if(btn) {
             btn.classList.remove('active');
+            btn.style.background = ""; 
+            btn.style.color = "";
         }
     });
     
@@ -165,23 +158,24 @@ async function cambiarSubVistaAdmin(nivel) {
         tabActiva.classList.add('active');
     }
 
-    const dataActual = adminDataMaster[`por_${nivel}`] || [];
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            adminSubVistaActual = nivel;
+            const dataActual = adminDataMaster[`por_${nivel}`] || [];
 
-    // Llenar Desplegable de Dinámicas
-    const dinSet = new Set(dataActual.map(d => d.dinamica));
-    const selectDin = document.getElementById('adminSelectDinamica');
-    selectDin.innerHTML = `<option value="TODAS">Todas las Dinámicas</option>` + 
-        [...dinSet].map(d => `<option value="${d}">${d}</option>`).join('');
+            const dinSet = new Set(dataActual.map(d => d.dinamica));
+            const selectDin = document.getElementById('adminSelectDinamica');
+            selectDin.innerHTML = `<option value="TODAS">Todas las Dinámicas</option>` + 
+                [...dinSet].map(d => `<option value="${d}">${d}</option>`).join('');
 
-    // Llenar Datalist de Buscador
-    const entSet = new Set(dataActual.map(d => d.entidad));
-    const dataList = document.getElementById('adminEntidadesList');
-    dataList.innerHTML = [...entSet].map(e => `<option value="${e}"></option>`).join('');
+            const entSet = new Set(dataActual.map(d => d.entidad));
+            const dataList = document.getElementById('adminEntidadesList');
+            dataList.innerHTML = [...entSet].map(e => `<option value="${e}"></option>`).join('');
 
-    limpiarFiltrosAdmin();
-    
-    // Ocultamos el Loader al finalizar
-    hideLoader(); 
+            limpiarFiltrosAdmin();
+            hideLoader(); 
+        }, 50); 
+    });
 }
 
 function limpiarFiltrosAdmin() {
@@ -221,7 +215,6 @@ function renderizarVistaAdmin(agrupado) {
         return;
     }
 
-    // Icono dinámico según la vista activa
     let icon = "fa-users";
     if (adminSubVistaActual === 'coordinador') icon = "fa-user-tie";
     else if (adminSubVistaActual === 'nacional') icon = "fa-flag";
@@ -233,20 +226,55 @@ function renderizarVistaAdmin(agrupado) {
             const badgeColor = d.unidad === 'Unds' ? '#3b82f6' : '#10b981';
             const textoUnidad = d.unidad === 'Unds' ? 'Unidades' : 'Ingresos';
             
+            // Mensajes de Estado Específicos para cumplimiento
+            const msgGeneral = d.faltante_general > 0 ? `Faltan ${d.faltante_general.toLocaleString()} ${textoUnidad}` : '¡Logrado!';
+            const msgCall = d.faltante_call > 0 ? `Faltan ${d.faltante_call.toLocaleString()}` : '¡Objetivo Especial Call Center Alcanzado!';
+            const msgSuper = d.faltante_super > 0 ? `Faltan ${d.faltante_super.toLocaleString()}` : '¡Objetivo Especial Supernumerario Alcanzado!';
+            
             return `
             <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                    <strong style="color: #1e293b;">${d.dinamica}</strong>
-                    <span style="color: ${d.faltante > 0 ? '#e11d48' : '#10b981'}; font-weight: bold; font-size: 0.85rem;">
-                        ${d.faltante > 0 ? 'Faltan ' + d.faltante.toLocaleString() + ' ' + textoUnidad : '¡Logrado!'}
-                    </span>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+                    <strong style="color: #1e293b; font-size: 1.1rem;">${d.dinamica}</strong>
+                    <span style="background: ${badgeColor}20; color: ${badgeColor}; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.75rem;">${d.tipo_dinamica.toUpperCase()}</span>
                 </div>
-                <div style="background: #f1f5f9; border-radius: 8px; height: 10px; overflow: hidden; width: 100%;">
-                    <div style="width: ${d.progreso}%; background: ${d.progreso >= 100 ? '#10b981' : '#00acec'}; height: 100%; transition: width 0.8s ease;"></div>
+                
+                <div style="margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 5px;">
+                        <span style="font-weight: 700; color: #334155;"><i class="fas fa-chart-pie" style="color: var(--primary);"></i> Progreso General</span>
+                        <span style="color: ${d.faltante_general > 0 ? '#e11d48' : '#10b981'}; font-weight:bold;">${msgGeneral}</span>
+                    </div>
+                    <div style="background: #f1f5f9; border-radius: 6px; height: 10px; overflow: hidden; width: 100%;">
+                        <div style="width: ${d.progreso_general}%; background: ${d.progreso_general >= 100 ? '#10b981' : '#00acec'}; height: 100%; transition: width 0.8s ease;"></div>
+                    </div>
+                    <div style="text-align: right; font-size: 0.75rem; color: #64748b; margin-top: 4px; font-weight: 600;">
+                        ${d.actual_general.toLocaleString()} / ${d.meta_general.toLocaleString()} (${d.progreso_general.toFixed(1)}%)
+                    </div>
                 </div>
-                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-top: 8px;">
-                    <span style="background: ${badgeColor}20; color: ${badgeColor}; padding: 2px 8px; border-radius: 8px; font-weight: 700;">${d.tipo_dinamica.toUpperCase()}</span>
-                    <span style="color: #64748b; font-weight: 600;">${d.actual.toLocaleString()} / ${d.meta.toLocaleString()} (${d.progreso.toFixed(1)}%)</span>
+
+                <div style="margin-bottom: 12px; padding-left: 12px; border-left: 2px solid #e2e8f0;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 5px;">
+                        <span style="font-weight: 600; color: #475569;"><i class="fas fa-headset" style="color: #f59e0b;"></i> Call Centers</span>
+                        <span style="color: ${d.faltante_call > 0 ? '#e11d48' : '#10b981'}; font-weight:bold;">${msgCall}</span>
+                    </div>
+                    <div style="background: #f1f5f9; border-radius: 6px; height: 6px; overflow: hidden; width: 100%;">
+                        <div style="width: ${d.progreso_call}%; background: ${d.progreso_call >= 100 ? '#10b981' : '#f59e0b'}; height: 100%; transition: width 0.8s ease;"></div>
+                    </div>
+                    <div style="text-align: right; font-size: 0.7rem; color: #64748b; margin-top: 4px; font-weight: 600;">
+                        ${d.actual_call.toLocaleString()} / ${d.meta_call.toLocaleString()} (${d.progreso_call.toFixed(1)}%)
+                    </div>
+                </div>
+
+                <div style="padding-left: 12px; border-left: 2px solid #e2e8f0;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 5px;">
+                        <span style="font-weight: 600; color: #475569;"><i class="fas fa-bolt" style="color: #8b5cf6;"></i> Supernumerarios</span>
+                        <span style="color: ${d.faltante_super > 0 ? '#e11d48' : '#10b981'}; font-weight:bold;">${msgSuper}</span>
+                    </div>
+                    <div style="background: #f1f5f9; border-radius: 6px; height: 6px; overflow: hidden; width: 100%;">
+                        <div style="width: ${d.progreso_super}%; background: ${d.progreso_super >= 100 ? '#10b981' : '#8b5cf6'}; height: 100%; transition: width 0.8s ease;"></div>
+                    </div>
+                    <div style="text-align: right; font-size: 0.7rem; color: #64748b; margin-top: 4px; font-weight: 600;">
+                        ${d.actual_super.toLocaleString()} / ${d.meta_super.toLocaleString()} (${d.progreso_super.toFixed(1)}%)
+                    </div>
                 </div>
             </div>`;
         }).join('');
@@ -270,7 +298,6 @@ function renderizarVistaAdmin(agrupado) {
 
     document.getElementById('totalGeneral').innerText = `${keys.length} Registros`;
 }
-
 
 // ========================================================
 // --- MÓDULO LÍDERES (SUPERVISOR / COORDINADOR) ---
