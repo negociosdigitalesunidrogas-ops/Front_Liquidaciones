@@ -23,7 +23,8 @@ window.onload = () => {
     document.getElementById('userCedula').innerHTML = `<i class="fas fa-id-card"></i> C.C. ${localStorage.getItem('documento_usuario') || "Sin registro"}`;
     
     // --- LÓGICA DE PERMISOS JERÁRQUICOS (3 NIVELES) ---
-    const cargo = (localStorage.getItem('cargo_usuario') || "").toUpperCase();
+    // Agregamos .trim() para eliminar espacios accidentales que vengan del Excel
+    const cargo = (localStorage.getItem('cargo_usuario') || "").toUpperCase().trim();
     
     // Referencias a los botones de navegación
     const tabAdmin = document.getElementById('tab-admin');
@@ -31,7 +32,8 @@ window.onload = () => {
     const tabDinamicas = document.getElementById('tab-dinamicas');
     const tabComisiones = document.getElementById('tab-comisiones');
 
-    if (cargo.includes("ADMIN")) {
+    // 💡 LA SOLUCIÓN: Usamos === para que sea EXACTAMENTE "ADMIN"
+    if (cargo === "ADMIN") {
         // 1. Mostrar solo pestaña ADMIN
         tabAdmin.classList.remove('hidden');
         tabLideres.classList.add('hidden');
@@ -48,7 +50,7 @@ window.onload = () => {
         switchView('lideres');
     } 
     else {
-        // 3. Es un vendedor: mostrar sus dinámicas y comisiones
+        // 3. Es un vendedor (incluyendo Administradores de PDV): mostrar sus dinámicas y comisiones
         tabAdmin.classList.add('hidden');
         tabLideres.classList.add('hidden');
         tabDinamicas.classList.remove('hidden');
