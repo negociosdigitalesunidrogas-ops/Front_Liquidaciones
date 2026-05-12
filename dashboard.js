@@ -210,15 +210,15 @@ function renderizarVistaAdmin(agrupado) {
         
         let htmlDinamicas = dinámicas.map(d => {
             const badgeColor = d.unidad === 'Unds' ? '#3b82f6' : '#10b981';
-            const textoUnidad = d.unidad === 'Unds' ? 'Unidades Rotadas' : 'Ingresos';
+            const textoUnidad = d.unidad === 'Unds' ? 'Unidades' : 'Ingresos';
+            const textoBadge = d.unidad === 'Unds' ? 'Unidades Rotadas' : 'Ingresos';
             
-            // 💡 REGLA DE ORO PARA EL BADGE: Si no tiene tipo, o es genérico, forzamos la unidad real
-            let tipoStr = d.tipo_dinamica;
+            // 💡 REGLA DE ORO PARA EL BADGE
+            let tipoStr = d.tipo_dinamica || "";
             if (!tipoStr || tipoStr.toUpperCase() === "DINÁMICA" || tipoStr.toUpperCase() === "N/A") {
-                tipoStr = textoUnidad;
+                tipoStr = textoBadge;
             }
             
-            // Si la vista activa es la ESPECIAL, dibujamos 3 barras
             if (adminSubVistaActual === 'especial') {
                 const f_gen = d.faltante_general || 0;
                 const msgGeneral = f_gen > 0 ? `Faltan ${f_gen.toLocaleString()} ${textoUnidad}` : '¡Logrado!';
@@ -280,7 +280,6 @@ function renderizarVistaAdmin(agrupado) {
                     </div>
                 </div>`;
             } 
-            // VISTAS ESTÁNDAR (Nacional, Coordinador, Supervisor) = 1 Barra
             else {
                 const f_norm = d.faltante || 0;
                 const a_norm = d.actual || 0;
@@ -364,7 +363,8 @@ async function cargarEquiposLider() {
             const badgeColor = din.unidad === 'Unds' ? '#3b82f6' : '#10b981';
             const textoUnidad = din.unidad === 'Unds' ? 'Unidades Rotadas' : 'Ingresos';
             
-            let tipoStr = din.tipo_dinamica;
+            // 💡 REGLA DE ORO PARA EL BADGE
+            let tipoStr = din.tipo_dinamica || "";
             if (!tipoStr || tipoStr.toUpperCase() === "DINÁMICA" || tipoStr.toUpperCase() === "N/A") {
                 tipoStr = textoUnidad;
             }
@@ -537,7 +537,8 @@ async function cargarDinamicas() {
             const textoUnidadGrupo = productos[0].unidad === 'Unds' ? 'Unidades Rotadas' : 'Ingresos';
             const badgeColor = productos[0].unidad === 'Unds' ? '#3b82f6' : '#10b981';
             
-            let tipoStr = productos[0].tipo_dinamica;
+            // 💡 REGLA DE ORO PARA EL BADGE
+            let tipoStr = productos[0].tipo_dinamica || "";
             if (!tipoStr || tipoStr.toUpperCase() === "DINÁMICA" || tipoStr.toUpperCase() === "N/A") {
                 tipoStr = textoUnidadGrupo;
             }
