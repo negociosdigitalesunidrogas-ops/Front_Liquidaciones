@@ -141,8 +141,8 @@ async function cargarVisionAdmin() {
 function cambiarSubVistaAdmin(nivel) {
     adminSubVistaActual = nivel;
     
-    // Cambiar visualmente las sub-pestañas
-    ['coordinador', 'supervisor', 'pdv'].forEach(n => {
+    // Cambiar visualmente las sub-pestañas (¡Se quitó 'pdv' de aquí!)
+    ['coordinador', 'supervisor'].forEach(n => {
         const btn = document.getElementById(`subtab-${n}`);
         if(btn) {
             btn.classList.remove('active');
