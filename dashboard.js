@@ -211,12 +211,11 @@ function renderizarVistaAdmin(agrupado) {
         let htmlDinamicas = dinámicas.map(d => {
             const badgeColor = d.unidad === 'Unds' ? '#3b82f6' : '#10b981';
             const textoUnidad = d.unidad === 'Unds' ? 'Unidades' : 'Ingresos';
-            const textoBadge = d.unidad === 'Unds' ? 'Unidades Rotadas' : 'Ingresos';
             
-            // 💡 REGLA DE ORO PARA EL BADGE
-            let tipoStr = d.tipo_dinamica || "";
+            // 💡 REGLA DE ORO PARA EL BADGE - VISTA ADMIN
+            let tipoStr = (d.tipo_dinamica || "").trim();
             if (!tipoStr || tipoStr.toUpperCase() === "DINÁMICA" || tipoStr.toUpperCase() === "N/A") {
-                tipoStr = textoBadge;
+                tipoStr = d.unidad === 'Unds' ? 'UNIDADES ROTADAS' : 'INGRESOS';
             }
             
             if (adminSubVistaActual === 'especial') {
@@ -363,10 +362,10 @@ async function cargarEquiposLider() {
             const badgeColor = din.unidad === 'Unds' ? '#3b82f6' : '#10b981';
             const textoUnidad = din.unidad === 'Unds' ? 'Unidades Rotadas' : 'Ingresos';
             
-            // 💡 REGLA DE ORO PARA EL BADGE
-            let tipoStr = din.tipo_dinamica || "";
+            // 💡 REGLA DE ORO PARA EL BADGE - VISTA LÍDERES
+            let tipoStr = (din.tipo_dinamica || "").trim();
             if (!tipoStr || tipoStr.toUpperCase() === "DINÁMICA" || tipoStr.toUpperCase() === "N/A") {
-                tipoStr = textoUnidad;
+                tipoStr = din.unidad === 'Unds' ? 'UNIDADES ROTADAS' : 'INGRESOS';
             }
 
             let htmlSucursales = din.sucursales.map(suc => {
@@ -537,10 +536,10 @@ async function cargarDinamicas() {
             const textoUnidadGrupo = productos[0].unidad === 'Unds' ? 'Unidades Rotadas' : 'Ingresos';
             const badgeColor = productos[0].unidad === 'Unds' ? '#3b82f6' : '#10b981';
             
-            // 💡 REGLA DE ORO PARA EL BADGE
-            let tipoStr = productos[0].tipo_dinamica || "";
+            // 💡 REGLA DE ORO PARA EL BADGE - VISTA VENDEDOR
+            let tipoStr = (productos[0].tipo_dinamica || "").trim();
             if (!tipoStr || tipoStr.toUpperCase() === "DINÁMICA" || tipoStr.toUpperCase() === "N/A") {
-                tipoStr = textoUnidadGrupo;
+                tipoStr = productos[0].unidad === 'Unds' ? 'UNIDADES ROTADAS' : 'INGRESOS';
             }
             
             let htmlProductos = productos.map(d => {
