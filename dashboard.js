@@ -500,6 +500,10 @@ async function cargarDinamicas() {
     const token = localStorage.getItem('access_token');
     const fecha = document.getElementById('fechaFiltro').value;
     
+    // 💡 NUEVO: Verificamos si el usuario es de un canal especial (Call Center o Supernumerario)
+    const cargo = (localStorage.getItem('cargo_usuario') || "").toUpperCase().trim();
+    const esCargoEspecial = cargo.includes("CALL CENTER") || cargo.includes("SUPERNUMERARIO");
+    
     try {
         const url = `${API_URL}/comisiones/mis-dinamicas?fecha=${fecha}&_cb=${new Date().getTime()}`;
         const res = await fetch(url, {
@@ -541,7 +545,6 @@ async function cargarDinamicas() {
             const textoUnidadGrupo = productos[0].unidad === 'Unds' ? 'Unidades Rotadas' : 'Ingresos';
             const badgeColor = productos[0].unidad === 'Unds' ? '#3b82f6' : '#10b981';
             
-            // 💡 REGLA DE ORO PARA EL BADGE - VISTA VENDEDOR
             let tipoStr = (productos[0].tipo_dinamica || "").trim();
             if (!tipoStr || tipoStr.toUpperCase() === "DINÁMICA" || tipoStr.toUpperCase() === "N/A") {
                 tipoStr = productos[0].unidad === 'Unds' ? 'UNIDADES ROTADAS' : 'INGRESOS';
@@ -562,13 +565,33 @@ async function cargarDinamicas() {
                 const colorInd = (d.progreso || 0) >= 100 ? 'var(--success, #10b981)' : 'var(--primary, #3b82f6)';
                 const colorPdv = (d.progreso_pdv || 0) >= 100 ? 'var(--success, #10b981)' : '#f59e0b';
                 
+                // 💡 MAGIA: Si NO es cargo especial, fabricamos el HTML de la sucursal. Si lo es, lo dejamos vacío.
+                let htmlEquipoSucursal = "";
+                if (!esCargoEspecial) {
+                    htmlEquipoSucursal = `
+                    <div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 5px;">
+                            <span style="font-weight: 600; color: #475569;"><i class="fas fa-store"></i> Equipo Sucursal</span>
+                            <span style="color: ${pdv_falt > 0 ? '#e11d48' : '#10b981'}; font-weight:bold;">
+                                ${pdv_falt > 0 ? 'Faltan ' + pdv_falt.toLocaleString() + ' ' + textoUnidad : '¡Logrado!'}
+                            </span>
+                        </div>
+                        <div style="background: #e2e8f0; border-radius: 6px; height: 10px; overflow: hidden; width: 100%;">
+                            <div style="width: ${d.progreso_pdv || 0}%; background: ${colorPdv}; height: 100%; border-radius: 6px; transition: width 0.5s ease;"></div>
+                        </div>
+                        <div style="text-align: right; font-size: 0.75rem; color: #64748b; margin-top: 4px; font-weight: 600;">
+                            ${pdv_act.toLocaleString()} / ${pdv_met.toLocaleString()} ${textoUnidad} (${(d.progreso_pdv || 0).toFixed(1)}%)
+                        </div>
+                    </div>`;
+                }
+
                 return `
                     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
                         <div style="font-weight: 700; font-size: 1.05rem; color: #1e293b; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
                             ${d.producto}
                         </div>
                         
-                        <div style="margin-bottom: 15px;">
+                        <div style="margin-bottom: ${esCargoEspecial ? '0' : '15px'};">
                             <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 5px;">
                                 <span style="font-weight: 600; color: #475569;"><i class="fas fa-user"></i> Mi Progreso</span>
                                 <span style="color: ${p_falt > 0 ? '#e11d48' : '#10b981'}; font-weight:bold;">
@@ -582,21 +605,8 @@ async function cargarDinamicas() {
                                 ${p_act.toLocaleString()} / ${p_met.toLocaleString()} ${textoUnidad} (${(d.progreso || 0).toFixed(1)}%)
                             </div>
                         </div>
-
-                        <div>
-                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 5px;">
-                                <span style="font-weight: 600; color: #475569;"><i class="fas fa-store"></i> Equipo Sucursal</span>
-                                <span style="color: ${pdv_falt > 0 ? '#e11d48' : '#10b981'}; font-weight:bold;">
-                                    ${pdv_falt > 0 ? 'Faltan ' + pdv_falt.toLocaleString() + ' ' + textoUnidad : '¡Logrado!'}
-                                </span>
-                            </div>
-                            <div style="background: #e2e8f0; border-radius: 6px; height: 10px; overflow: hidden; width: 100%;">
-                                <div style="width: ${d.progreso_pdv || 0}%; background: ${colorPdv}; height: 100%; border-radius: 6px; transition: width 0.5s ease;"></div>
-                            </div>
-                            <div style="text-align: right; font-size: 0.75rem; color: #64748b; margin-top: 4px; font-weight: 600;">
-                                ${pdv_act.toLocaleString()} / ${pdv_met.toLocaleString()} ${textoUnidad} (${(d.progreso_pdv || 0).toFixed(1)}%)
-                            </div>
-                        </div>
+                        
+                        ${htmlEquipoSucursal}
                     </div>`;
             }).join('');
 
